@@ -16,7 +16,7 @@ RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
 
 # Force model download & cache
-RUN python -c "from transformers import pipeline; pipeline('sentiment-analysis', model='distilbert-base-uncased-finetuned-sst-2-english')"
+RUN python -c "from transformers import pipeline; pipeline('sentiment-analysis', model='distilbert-base-uncased-finetuned-sst-2-english', framework='pt')"
 
 # Expose port (Railway uses $PORT)
 EXPOSE 8080
