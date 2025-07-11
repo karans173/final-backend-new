@@ -12,7 +12,6 @@ WORKDIR /app
 COPY . /app
 
 # Install dependencies
-RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
 
 # Force model download & cache

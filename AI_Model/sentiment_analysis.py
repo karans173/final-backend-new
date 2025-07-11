@@ -2,6 +2,7 @@ import pandas as pd
 from supabase import create_client
 from transformers import pipeline
 import warnings
+import re
 
 warnings.filterwarnings("ignore", category=FutureWarning)
 sentiment_analyzer = None
@@ -10,6 +11,11 @@ SUPABASE_URL = "https://rizamamuiwyyplawssvr.supabase.co".strip()
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJpemFtYW11aXd5eXBsYXdzc3ZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIxMzA3MDIsImV4cCI6MjA2NzcwNjcwMn0.Qfno-pgz05Fjs0_K5WKMLdUFtVeg-NuNVoZhPIwLjvg".strip()
 BUCKET_NAME = "news-summary"
 FILE_NAME = "generated_text.txt"
+
+def split_into_sentences(text):
+    # A basic regex-based sentence splitter
+    sentence_endings = re.compile(r'(?<=[.!?]) +')
+    return sentence_endings.split(text)
 
 def get_sentiment_analyzer():
     global sentiment_analyzer
@@ -28,7 +34,8 @@ def get_sentiment_analyzer():
     return sentiment_analyzer
 
 def analyze_text_file_sentiment(text: str):
-    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    sentences = split_into_sentences(text)
+    print(f"📄 Total sentences extracted: {len(sentences)}")
 
     analyzer = get_sentiment_analyzer()
     if analyzer is None:
@@ -38,13 +45,13 @@ def analyze_text_file_sentiment(text: str):
         }
 
     results = []
-    for line in lines:
-        if len(line) < 10:
+    for sentence in sentences:
+        if len(sentence.strip()) < 10:
             continue
         try:
-            result = analyzer(line)[0]
+            result = analyzer(sentence.strip())[0]
             results.append({
-                'text': line,
+                'text': sentence.strip(),
                 'sentiment': result['label'],
                 'score': result['score']
             })
