@@ -15,7 +15,7 @@ COPY . /app
 RUN apt-get update && apt-get install -y build-essential
 
 # Upgrade pip and install numpy first
-
+RUN pip install --upgrade pip
 RUN pip install numpy==2.0.1
 
 # Now install rest of dependencies
