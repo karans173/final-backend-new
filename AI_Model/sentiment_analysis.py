@@ -12,54 +12,46 @@ SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 BUCKET_NAME = "news-summary"
 FILE_NAME = "generated_text.txt"
 
-def split_into_sentences(text):
-    # A basic regex-based sentence splitter
-    sentence_endings = re.compile(r'(?<=[.!?]) +')
-    return sentence_endings.split(text)
+def clean_text(text):
+    # Remove Markdown bullets, asterisks, and unnecessary spacing
+    text = re.sub(r"[*•]", "", text)  # Remove bullets
+    text = re.sub(r"\s+", " ", text)  # Normalize spaces
+    return text.strip()
 
-def get_sentiment_analyzer():
-    global sentiment_analyzer
-    if sentiment_analyzer is None:
-        try:
-            print("🤖 Initializing sentiment analysis pipeline...")
-            sentiment_analyzer = pipeline(
-                "sentiment-analysis",
-                model="distilbert-base-uncased-finetuned-sst-2-english",
-                framework="pt" # <-- force PyTorch instead of TensorFlow
-                
-            )
-            print("✅ Model pipeline loaded successfully.")
-        except Exception as e:
-            print(f"❌ Pipeline Initialization Error: {e}")
-            return None
-    return sentiment_analyzer
+def split_into_sentences(text):
+    # Use more robust sentence splitting
+    return re.split(r'(?<=[.!?])\s+', text)
 
 def analyze_text_file_sentiment(text: str):
-    sentences = split_into_sentences(text)
+    cleaned_text = clean_text(text)
+    sentences = split_into_sentences(cleaned_text)
     print(f"📄 Total sentences extracted: {len(sentences)}")
 
-    analyzer = get_sentiment_analyzer()
-    if analyzer is None:
-        return {
-            "error": "Sentiment analyzer could not be initialized.",
-            "stage": "pipeline_init"
-        }
+    try:
+        analyzer = pipeline("sentiment-analysis", model="distilbert-base-uncased-finetuned-sst-2-english")
+        print("✅ Model pipeline loaded successfully.")
+    except Exception as e:
+        print(f"❌ Pipeline Initialization Error: {e}")
+        return {"error": "Pipeline init failed", "stage": "pipeline"}
 
     results = []
     for sentence in sentences:
-        if len(sentence.strip()) < 10:
-            continue
+        stripped = sentence.strip()
+        if len(stripped) < 3:
+            continue  # skip meaningless short fragments
         try:
-            result = analyzer(sentence.strip())[0]
+            result = analyzer(stripped)[0]
             results.append({
-                'text': sentence.strip(),
+                'text': stripped,
                 'sentiment': result['label'],
                 'score': result['score']
             })
         except Exception as e:
+            print(f"⚠️ Failed to analyze sentence: {stripped[:60]}... - Error: {e}")
             continue
 
     if not results:
+        print("❌ All sentences were either too short or failed analysis.")
         return {
             "error": "All lines failed to analyze or were too short.",
             "stage": "analysis"
@@ -77,11 +69,6 @@ def analyze_text_file_sentiment(text: str):
         'normalized_sentiment': normalized_sentiment,
         'avg_sentiment_score': avg_sentiment_score
     }
-
-
-
-
-
 
 
 
