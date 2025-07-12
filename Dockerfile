@@ -11,7 +11,14 @@ WORKDIR /app
 # Copy files
 COPY . /app
 
-# Install dependencies
+# System dependencies (optional but good for numpy performance)
+RUN apt-get update && apt-get install -y build-essential
+
+# Upgrade pip and install numpy first
+
+RUN pip install numpy==2.0.1
+
+# Now install rest of dependencies
 RUN pip install -r requirements.txt
 
 # Force model download & cache
