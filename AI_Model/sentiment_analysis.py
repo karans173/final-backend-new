@@ -25,6 +25,7 @@ def get_sentiment_analyzer():
             sentiment_analyzer = pipeline(
                 "sentiment-analysis",
                 model="distilbert-base-uncased-finetuned-sst-2-english",
+                framework="pt" # <-- force PyTorch instead of TensorFlow
                 
             )
             print("✅ Model pipeline loaded successfully.")
