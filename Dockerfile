@@ -28,4 +28,4 @@ RUN python -c "from transformers import pipeline; pipeline('sentiment-analysis',
 EXPOSE 8080
 
 # Start with gunicorn
-CMD ["gunicorn", "app:app", "-b", "0.0.0.0:8080", "--workers", "1", "--threads", "1", "--timeout", "600"]
+CMD ["gunicorn", "app:app", "-b", "0.0.0.0:8080", "--workers", "4", "--threads", "2", "--timeout", "600"]
